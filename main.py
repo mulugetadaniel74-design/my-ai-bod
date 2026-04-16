@@ -1,26 +1,36 @@
 import os
 import telebot
 from groq import Groq
+from flask import Flask
+from threading import Thread
 
-# ቁልፎችን ከ Render Environment እናመጣለን
+# Render የሚፈልገው ትንሽ የዌብ ሰርቨር
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "ቦቱ በሰላም እየሰራ ነው!"
+
+def run_web():
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
+
+# የቦት ዝግጅት
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
 
 bot = telebot.TeleBot(BOT_TOKEN)
 client = Groq(api_key=GROQ_API_KEY)
 
-# ማንነትህን የሚገልጽ መመሪያ
 SYSTEM_INSTRUCTION = (
     "አንተ በዳንኤል ሙልጌታ (Daniel Mulugeta) የተሰራህ ትልቅ የቴክኖሎጂ ድርጅት ነህ። "
     "ስምህ 'DMK Wisdom Bot' ይባላል። ፈጣሪህ ዳንኤል ሙልጌታ (Tech Founder) ነው። "
-    "ሁልጊዜ በአማርኛ ብቻ መልስ። ለተጠቃሚዎች ሰላምታ ስትሰጥ 'እኔ በዳንኤል ሙልጌታ የተሰራሁ የቴክኖሎጂ ድርጅት ነኝ' በል። "
-    "እንግሊዝኛ አትጠቀም፣ በአጭርና ግልጽ አማርኛ ተናገር።"
+    "ሁልጊዜ በአጭርና ግልጽ አማርኛ ብቻ መልስ።"
 )
 
-@bot.message_handler(commands=['start', 'help'])
+@bot.message_handler(commands=['start'])
 def send_welcome(message):
-    welcome_text = "ሰላም! እኔ በዳንኤል ሙልጌታ የተሰራሁ ትልቅ የቴክኖሎጂ ድርጅት ነኝ። ምን ላግዝህ?"
-    bot.reply_to(message, welcome_text)
+    bot.reply_to(message, "ሰላም! እኔ በዳንኤል ሙልጌታ የተሰራሁ የቴክኖሎጂ ድርጅት ነኝ። ምን ላግዝህ?")
 
 @bot.message_handler(func=lambda message: True)
 def handle_text(message):
@@ -36,9 +46,10 @@ def handle_text(message):
     except Exception as e:
         print(f"Error: {e}")
 
-# ፎቶ ሲላክ እንዲያነብ (ለወደፊቱ Groq Vision ሲጨምር ዝግጁ ይሆናል)
-@bot.message_handler(content_types=['photo'])
-def handle_photo(message):
-    bot.reply_to(message, "ፎቶውን አይቼዋለሁ! ነገር ግን በአሁኑ ሰዓት በጽሁፍ ብታወራኝ ይሻላል። እኔ በዳንኤል ሙልጌታ የተሰራሁ ረዳትህ ነኝ።")
-
-bot.polling(none_stop=True)
+if __name__ == "__main__":
+    # ዌብ ሰርቨሩን በጎን ማስነሳት
+    t = Thread(target=run_web)
+    t.start()
+    # ቦቱን ማስነሳት
+    bot.polling(none_stop=True)
+                 
