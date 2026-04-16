@@ -4,42 +4,32 @@ from groq import Groq
 from flask import Flask
 from threading import Thread
 
-# Render ላይ ቦቱ እንዳይዘጋ ፖርት መክፈቻ
+# Render እንዳይዘጋ ፖርት መክፈቻ
 app = Flask('')
-
 @app.route('/')
-def home():
-    return "DMK Wisdom Bot is Live!"
-
+def home(): return "DMK Wisdom Bot is Live!"
 def run_web():
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
 
-# ቁልፎች
+# ቁልፎች (ከ Render Environment የሚመጡ)
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
 
 bot = telebot.TeleBot(BOT_TOKEN)
 client = Groq(api_key=GROQ_API_KEY)
 
-# ሁሉንም ቋንቋ እንዲችል የተደረገ መመሪያ
+# የተሻሻለ መመሪያ (ቋንቋ እንዳይቀላቅል እና ቃላትን እንዳይደግም)
 SYSTEM_INSTRUCTION = (
-    "አንተ በዳንኤል ሙልጌታ (Daniel Mulugeta) የተሰራህ ትልቅ የቴክኖሎጂ ድርጅት ነህ። "
-    "ስምህ 'DMK Wisdom Bot' ይባላል። ፈጣሪህ ዳንኤል ሙልጌታ (Tech Founder) ነው። "
-    "ተጠቃሚው በየትኛውም ቋንቋ ቢጠይቅህ በዛው ቋንቋ በትህትና መልስ። "
-    "ማን እንደሰራህ ከተጠየቅህ ግን ሁልጊዜ 'በዳንኤል ሙልጌታ የተሰራሁ ድርጅት ነኝ' በል።"
+    "Your name is DMK Wisdom Bot, created by Daniel Mulugeta. "
+    "Always respond in the same language the user uses. "
+    "Do not repeat 'I am created by Daniel Mulugeta' in every message unless specifically asked. "
+    "Be direct and helpful. If the user speaks Amharic, reply in Amharic. If English, reply in English."
 )
 
-@bot.message_handler(commands=['start', 'help'])
+@bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.reply_to(message, "ሰላም! እኔ በዳንኤል ሙልጌታ የተሰራሁ የቴክኖሎጂ ድርጅት ነኝ። በፈለጉት ቋንቋ መጠየቅ ይችላሉ።")
-
-# ፋይሎች ሲላኩ (ቮይስ፣ ቪዲዮ፣ ፎቶ)
-@bot.message_handler(content_types=['photo', 'video', 'voice', 'document'])
-def handle_files(message):
-    msg = "ይህንን ፋይል አይቼዋለሁ! እኔ በዳንኤል ሙልጌታ የተሰራሁ የቴክኖሎጂ ድርጅት ነኝ። "
-    msg += "ፈጣሪዬ ዳንኤል ለወደፊቱ ይህንን ፋይል እንድተነትን ያደርገኛል። ለአሁኑ ግን በጽሁፍ ያውሩኝ።"
-    bot.reply_to(message, msg)
+    bot.reply_to(message, "ሰላም! እኔ DMK Wisdom Bot ነኝ። በምን ላግዝህ?")
 
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
@@ -56,8 +46,6 @@ def handle_message(message):
         print(f"Error: {e}")
 
 if __name__ == "__main__":
-    t = Thread(target=run_web)
-    t.start()
-    print("ቦቱ መስራት ጀምሯል...")
+    Thread(target=run_web).start()
     bot.polling(none_stop=True)
-            
+        
